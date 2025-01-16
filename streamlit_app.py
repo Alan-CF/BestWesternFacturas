@@ -29,7 +29,6 @@ with col2:
             label="Descargar",
             data=file,
             file_name=uploaded_file.name,
-            #file_name="workbook.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             type="primary",
             use_container_width=True

@@ -4,7 +4,7 @@ from io import BytesIO
 import pandas as pd
 import openpyxl
 import tempfile
-
+import os
 
 class FileProcessor:
     def __init__(self):
@@ -19,21 +19,25 @@ class FileProcessor:
         self.__processZip(zip_file)
         data = self.__formatOutputFiles(inputZipName)
 
-
-
         return data
         
     
     def __formatOutputFiles(self, inputZipName):
-        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_factura:
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_factura: #Se debe de borrar temp_factura despues de 
             facturaFilename = temp_factura.name
             self.facturasWB.save(facturaFilename)
-            #file_bytes = temp_factura.read()
+        
+        for notaCredito in self.notasCredito:
+            pass
 
-        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as temp_zip:
+
+        with tempfile.NamedTemporaryFile(suffix=".zip") as temp_zip:
             with zipfile.ZipFile(temp_zip.name, 'w') as zipf:
                 zipf.write(facturaFilename, arcname= inputZipName.split(".")[0] + ".xlsx")
             zip_bytes = temp_zip.read()
+
+        if os.path.exists(facturaFilename): # Borrar temp files
+            os.remove(facturaFilename)
         return zip_bytes;
     
     def __processZip(self, zip_file):
