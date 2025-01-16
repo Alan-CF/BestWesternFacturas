@@ -14,10 +14,22 @@ class FileProcessor:
 
         self.facturasWB = openpyxl.load_workbook('Template Amazon.xlsx')
         self.notasCredito = []
-
         pass
+
+    def run(self, zip_file):
+        self.__processZip(zip_file)
+        data = self.__formatOutputFiles()
+        return data
     
-    def processZip(self, zip_file):
+    def __formatOutputFiles(self):
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_file:
+            temp_filename = temp_file.name
+            self.facturasWB.save(temp_filename)
+            file_bytes = temp_file.read()
+
+        return file_bytes;
+    
+    def __processZip(self, zip_file):
         try:
             with zipfile.ZipFile(BytesIO(zip_file.read())) as zf:
                 self.fileName = zf.filename
@@ -27,9 +39,7 @@ class FileProcessor:
                     if file_name.endswith(('.xls', '.xlsx')):
                         with zf.open(file_name) as file:
                             try:
-
                                 self.__processFile(file)
-
                             except Exception as e:
                                 st.error(f"Error reading {file_name}: {str(e)}")
                     else:
@@ -124,14 +134,20 @@ class FileProcessor:
                     'REFERENCIA': referencia
                 }])], ignore_index=True)
             factura_number += 1
-
         wb.close()
+
+        # st.write(output_data)
+        # st.write(credit_notes_data)
+
         output_data = output_data.drop(output_data.columns[0],axis=1)
         data_to_write = output_data.values.tolist()
 
+        ws = self.facturasWB.active
+        start_column = 3  
+        for row in data_to_write:
+            for idx, value in enumerate(row):
+                ws.cell(row=self.start_row, column=start_column + idx, value=value)
+            self.start_row += 1  # Move to the next row after writing each row of data
+        self.facturasWB.close()
+
         
-
-
-
-
-
