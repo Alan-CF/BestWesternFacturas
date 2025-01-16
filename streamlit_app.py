@@ -18,7 +18,7 @@ col1, col2 = st.columns(2)
 with col1:
     if st.button("Process File", type="secondary", use_container_width=True):
         if uploaded_file:
-            file = fp.run(uploaded_file)  # Process the uploaded file
+            file = fp.run(uploaded_file, uploaded_file.name)  # Process the uploaded file
             st.success("File processed successfully!")
         else:
             st.error("Por favor sube un archivo .zip primero.")
@@ -27,9 +27,9 @@ with col2:
     if file is not None:
         st.download_button(
             label="Descargar",
-            data=file["data"],
-            #file_name=uploaded_file.name,
-            file_name="workbook.xlsx",
+            data=file,
+            file_name=uploaded_file.name,
+            #file_name="workbook.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             type="primary",
             use_container_width=True

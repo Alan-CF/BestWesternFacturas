@@ -15,22 +15,26 @@ class FileProcessor:
         self.notasCredito = [] #Dataframes de notas
         pass
 
-    def run(self, zip_file):
+    def run(self, zip_file, inputZipName):
         self.__processZip(zip_file)
-        data = self.__formatOutputFiles()
+        data = self.__formatOutputFiles(inputZipName)
 
 
 
-        return {
-            "data": data,
-        }
+        return data
+        
     
-    def __formatOutputFiles(self):
-        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_file:
-            temp_filename = temp_file.name
-            self.facturasWB.save(temp_filename)
-            file_bytes = temp_file.read()
-        return file_bytes;
+    def __formatOutputFiles(self, inputZipName):
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_factura:
+            facturaFilename = temp_factura.name
+            self.facturasWB.save(facturaFilename)
+            #file_bytes = temp_factura.read()
+
+        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as temp_zip:
+            with zipfile.ZipFile(temp_zip.name, 'w') as zipf:
+                zipf.write(facturaFilename, arcname= inputZipName.split(".")[0] + ".xlsx")
+            zip_bytes = temp_zip.read()
+        return zip_bytes;
     
     def __processZip(self, zip_file):
         try:
