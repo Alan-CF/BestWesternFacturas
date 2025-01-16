@@ -9,30 +9,33 @@ import tempfile
 class FileProcessor:
     def __init__(self):
         self.start_row = 17
-        self.fileName = "FileName"
         self.template_path = 'Template Amazon.xlsx'
 
         self.facturasWB = openpyxl.load_workbook('Template Amazon.xlsx')
-        self.notasCredito = []
+        self.notasCredito = [] #Dataframes de notas
         pass
 
     def run(self, zip_file):
         self.__processZip(zip_file)
         data = self.__formatOutputFiles()
-        return data
+
+
+
+        return {
+            "data": data,
+        }
     
     def __formatOutputFiles(self):
         with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_file:
             temp_filename = temp_file.name
             self.facturasWB.save(temp_filename)
             file_bytes = temp_file.read()
-
         return file_bytes;
     
     def __processZip(self, zip_file):
         try:
             with zipfile.ZipFile(BytesIO(zip_file.read())) as zf:
-                self.fileName = zf.filename
+
                 file_list = zf.namelist()
 
                 for file_name in file_list:
@@ -136,9 +139,6 @@ class FileProcessor:
             factura_number += 1
         wb.close()
 
-        # st.write(output_data)
-        # st.write(credit_notes_data)
-
         output_data = output_data.drop(output_data.columns[0],axis=1)
         data_to_write = output_data.values.tolist()
 
@@ -149,5 +149,10 @@ class FileProcessor:
                 ws.cell(row=self.start_row, column=start_column + idx, value=value)
             self.start_row += 1  # Move to the next row after writing each row of data
         self.facturasWB.close()
+
+        if not credit_notes_data.empty:
+            self.notasCredito.append(credit_notes_data)
+
+        
 
         

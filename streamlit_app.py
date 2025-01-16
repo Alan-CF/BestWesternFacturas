@@ -10,7 +10,7 @@ st.title("Ingresa las notas de crédito")
 uploaded_file = st.file_uploader("Suba un archivo .zip", type="zip")
 
 # Initialize a variable to store processed data
-data = None
+file = None
 
 # Two buttons below the file uploader
 col1, col2 = st.columns(2)
@@ -18,17 +18,17 @@ col1, col2 = st.columns(2)
 with col1:
     if st.button("Process File", type="secondary", use_container_width=True):
         if uploaded_file:
-            data = fp.run(uploaded_file)  # Process the uploaded file
+            file = fp.run(uploaded_file)  # Process the uploaded file
             st.success("File processed successfully!")
-            st.write(data)  # Display the processed data
         else:
             st.error("Por favor sube un archivo .zip primero.")
 
 with col2:
-    if data is not None:
+    if file is not None:
         st.download_button(
             label="Descargar",
-            data=data,
+            data=file["data"],
+            #file_name=uploaded_file.name,
             file_name="workbook.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             type="primary",
