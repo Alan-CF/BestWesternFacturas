@@ -5,6 +5,7 @@ import pandas as pd
 import openpyxl
 import tempfile
 import os
+from typing import List
 
 class FileProcessor:
     def __init__(self):
@@ -12,7 +13,7 @@ class FileProcessor:
         self.template_path = 'Template Amazon.xlsx'
 
         self.facturasWB = openpyxl.load_workbook('Template Amazon.xlsx')
-        self.notasCredito = [] #Dataframes de notas
+        self.notasCredito: List[pd.DataFrame] = [] 
         pass
 
     def run(self, zip_file, inputZipName):
@@ -23,21 +24,31 @@ class FileProcessor:
         
     
     def __formatOutputFiles(self, inputZipName):
-        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_factura: #Se debe de borrar temp_factura despues de 
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_factura:
             facturaFilename = temp_factura.name
             self.facturasWB.save(facturaFilename)
         
+        notasCreditoFilenames = []
         for notaCredito in self.notasCredito:
-            pass
-
+            with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_notaCredito:
+                notasCreditoFilenames.append(temp_notaCredito.name)
+                notaCredito.to_excel(temp_notaCredito.name, startrow=15, index=False)
 
         with tempfile.NamedTemporaryFile(suffix=".zip") as temp_zip:
             with zipfile.ZipFile(temp_zip.name, 'w') as zipf:
                 zipf.write(facturaFilename, arcname= inputZipName.split(".")[0] + ".xlsx")
+
+                for i, filename in enumerate(notasCreditoFilenames):
+                    zipf.write(filename, arcname= f"credit_notes/{i}.xlsx")
+
             zip_bytes = temp_zip.read()
 
         if os.path.exists(facturaFilename): # Borrar temp files
             os.remove(facturaFilename)
+
+        for notaCredito in notasCreditoFilenames:
+             if os.path.exists(notaCredito): # Borrar temp files
+                os.remove(notaCredito)
         return zip_bytes;
     
     def __processZip(self, zip_file):
