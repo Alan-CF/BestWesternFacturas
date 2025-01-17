@@ -49,8 +49,7 @@ class FileProcessor:
         for notaCredito in notasCreditoFilenames:
              if os.path.exists(notaCredito["temp"]): # Borra temp files
                 os.remove(notaCredito["temp"])
-
-        st.write("# credit notes: " + str(len(notasCreditoFilenames)))
+                
         return zip_bytes;
     
     def __processZip(self, zip_file):
@@ -58,7 +57,6 @@ class FileProcessor:
             with zipfile.ZipFile(BytesIO(zip_file.read())) as zf:
 
                 file_list = zf.namelist()
-                st.write("# files: " + str(len(file_list)))
 
                 for file_name in file_list:
                     if file_name.endswith(('.xls', '.xlsx')):
