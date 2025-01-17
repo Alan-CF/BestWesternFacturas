@@ -28,27 +28,29 @@ class FileProcessor:
             facturaFilename = temp_factura.name
             self.facturasWB.save(facturaFilename)
         
-        notasCreditoFilenames = []
+        notasCreditoFilenames: List[dict[str,str]]= []
         for notaCredito in self.notasCredito:
             with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_notaCredito:
-                notasCreditoFilenames.append(temp_notaCredito.name)
-                notaCredito.to_excel(temp_notaCredito.name, startrow=15, index=False)
+                notasCreditoFilenames.append({"temp": temp_notaCredito.name, "final": notaCredito["name"]})
+                notaCredito["data"].to_excel(temp_notaCredito.name, startrow=15, index=False)
 
         with tempfile.NamedTemporaryFile(suffix=".zip") as temp_zip:
             with zipfile.ZipFile(temp_zip.name, 'w') as zipf:
                 zipf.write(facturaFilename, arcname= inputZipName.split(".")[0] + ".xlsx")
 
                 for i, filename in enumerate(notasCreditoFilenames):
-                    zipf.write(filename, arcname= f"credit_notes/{i}.xlsx")
+                    zipf.write(filename["temp"], arcname= f"credit_notes/{filename['final']}.xlsx")
 
             zip_bytes = temp_zip.read()
 
-        if os.path.exists(facturaFilename): # Borrar temp files
+        if os.path.exists(facturaFilename): # Borra temp files
             os.remove(facturaFilename)
 
         for notaCredito in notasCreditoFilenames:
-             if os.path.exists(notaCredito): # Borrar temp files
-                os.remove(notaCredito)
+             if os.path.exists(notaCredito["temp"]): # Borra temp files
+                os.remove(notaCredito["temp"])
+
+        st.write("# credit notes: " + str(len(notasCreditoFilenames)))
         return zip_bytes;
     
     def __processZip(self, zip_file):
@@ -56,12 +58,13 @@ class FileProcessor:
             with zipfile.ZipFile(BytesIO(zip_file.read())) as zf:
 
                 file_list = zf.namelist()
+                st.write("# files: " + str(len(file_list)))
 
                 for file_name in file_list:
                     if file_name.endswith(('.xls', '.xlsx')):
                         with zf.open(file_name) as file:
                             try:
-                                self.__processFile(file)
+                                self.__processFile(file, file_name)
                             except Exception as e:
                                 st.error(f"Error reading {file_name}: {str(e)}")
                     else:
@@ -87,7 +90,7 @@ class FileProcessor:
         client = client.replace(", S.A", "").strip()
         return client
 
-    def __processFile(self, file):
+    def __processFile(self, file, file_name):
         input_data = pd.read_excel(file, header=19)  # header is in the 20th row (0-indexed)
         input_data.columns = input_data.columns.str.strip()
 
@@ -114,7 +117,6 @@ class FileProcessor:
             importe = united_price_usd
 
             if united_price_usd < 0:
-                # Add to the credit notes DataFrame
                 credit_notes_data = pd.concat([credit_notes_data, pd.DataFrame([{
                     'DESPACHO': 'MIDESPACHO',
                     'NO. FACTURA': factura_number,
@@ -170,7 +172,7 @@ class FileProcessor:
         self.facturasWB.close()
 
         if not credit_notes_data.empty:
-            self.notasCredito.append(credit_notes_data)
+            self.notasCredito.append({"data": credit_notes_data, "name": file_name})
 
         
 
