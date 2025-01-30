@@ -4,6 +4,7 @@ import time
 import io
 from file_processor import FileProcessor
 
+
 # Initialize file processor
 fp = FileProcessor()
 
@@ -13,18 +14,12 @@ st.image("logo_top.png", width=250)
 st.title("📂 Facturas Best Western")
 st.write("Suba un archivo .zip para procesar las facturas.")
 
-st.sidebar.header("Configuraciones")
-processing_speed = st.sidebar.slider("Velocidad de procesamiento", 1, 10, 5)
+processing_speed = 5
 
 
 # File uploader
 uploaded_file = st.file_uploader("Suba un archivo .zip", type=["zip"],
-                                 help="Asegúrese de que el archivo está en formato ZIP")
-
-if uploaded_file:
-    # Display file details
-    file_details = {"Nombre": uploaded_file.name, "Tamaño": f"{uploaded_file.size / 1024:.2f} KB"}
-    st.json(file_details)
+                                 help="Asegúrese de que el archivo está en formato .zip")
 
 # Initialize variables
 processed_file = None
@@ -44,6 +39,10 @@ with col1:
                 progress_bar.progress(i / processing_speed)
 
             processed_file = fp.run(uploaded_file, uploaded_file.name)  # Process the file
+
+            progress_bar.empty()
+            status_text.empty()
+
             st.success("✅ Archivo procesado con éxito!")
         else:
             st.error("⚠️ Por favor sube un archivo .zip primero.")
@@ -68,3 +67,4 @@ with footer_col1:
     st.markdown("**Hecho por Hanova Solutions**")
 with footer_col2:
     st.image("logo_bottom.png", width=100)
+
