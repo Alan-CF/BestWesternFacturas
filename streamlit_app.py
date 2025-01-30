@@ -16,7 +16,6 @@ st.write("Suba un archivo .zip para procesar las facturas.")
 
 processing_speed = 5
 
-
 # File uploader
 uploaded_file = st.file_uploader("Suba un archivo .zip", type=["zip"],
                                  help="Asegúrese de que el archivo está en formato .zip")
@@ -68,3 +67,11 @@ with footer_col1:
 with footer_col2:
     st.image("logo_bottom.png", width=100)
 
+
+hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
