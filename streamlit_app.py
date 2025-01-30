@@ -1,38 +1,70 @@
 import streamlit as st
+import pandas as pd
+import time
+import io
 from file_processor import FileProcessor
 
+# Initialize file processor
 fp = FileProcessor()
 
 # Set the title of the Streamlit app
-st.title("Ingresa las notas de crédito")
+st.set_page_config(page_title="Facturación Best Western", page_icon="📂", layout="wide")
+st.image("logo_top.png", width=250)
+st.title("📂 Facturas Best Western")
+st.write("Suba un archivo .zip para procesar las facturas.")
 
-# File uploader for ZIP files
-uploaded_file = st.file_uploader("Suba un archivo .zip", type="zip")
+st.sidebar.header("Configuraciones")
+processing_speed = st.sidebar.slider("Velocidad de procesamiento", 1, 10, 5)
 
-# Initialize a variable to store processed data
-file = None
 
-# Two buttons below the file uploader
+# File uploader
+uploaded_file = st.file_uploader("Suba un archivo .zip", type=["zip"],
+                                 help="Asegúrese de que el archivo está en formato ZIP")
+
+if uploaded_file:
+    # Display file details
+    file_details = {"Nombre": uploaded_file.name, "Tamaño": f"{uploaded_file.size / 1024:.2f} KB"}
+    st.json(file_details)
+
+# Initialize variables
+processed_file = None
+progress_bar = st.empty()
+status_text = st.empty()
+
+# Buttons layout
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("Process File", type="secondary", use_container_width=True):
+    if st.button("🚀 Procesar Archivo", type="primary", use_container_width=True):
         if uploaded_file:
-            file = fp.run(uploaded_file, uploaded_file.name)  # Process the uploaded file
-            st.success("File processed successfully!")
+            status_text.info("Procesando archivo...")
+
+            for i in range(1, processing_speed + 1):
+                time.sleep(0.2)  # Simulating processing delay
+                progress_bar.progress(i / processing_speed)
+
+            processed_file = fp.run(uploaded_file, uploaded_file.name)  # Process the file
+            st.success("✅ Archivo procesado con éxito!")
         else:
-            st.error("Por favor sube un archivo .zip primero.")
+            st.error("⚠️ Por favor sube un archivo .zip primero.")
 
 with col2:
-    if file is not None:
+    if processed_file is not None:
         st.download_button(
-            label="Descargar",
-            data=file,
-            file_name=uploaded_file.name,
+            label="⬇️ Descargar Archivo Procesado",
+            data=processed_file,
+            file_name=f"Procesado_{uploaded_file.name}",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             type="primary",
             use_container_width=True
         )
     else:
-        if st.button(label="Descargar", type="primary", use_container_width=True):
-            st.error("Por favor procesa el archivo primero.")
+        if st.button(label="⬇️ Descargar", type="primary", use_container_width=True):
+            st.error("⚠️ Por favor procesa el archivo primero.")
+
+st.markdown("---")
+footer_col1, footer_col2 = st.columns([0.8, 0.2])
+with footer_col1:
+    st.markdown("**Hecho por Hanova Solutions**")
+with footer_col2:
+    st.image("logo_bottom.png", width=100)
